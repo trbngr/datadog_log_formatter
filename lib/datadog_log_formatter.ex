@@ -1,6 +1,7 @@
 defmodule DatadogLogFormatter do
   def format(level, message, timestamp, metadata) do
-    options = Application.get_env(:logger, :datadog_log_formatter, service: :elixir)
+    options =
+      Application.get_env(:logger, :datadog_log_formatter, service: :elixir, environment: nil)
 
     {:ok, hostname} = :inet.gethostname()
 
@@ -20,6 +21,11 @@ defmodule DatadogLogFormatter do
       host: List.to_string(hostname),
       service: options[:service]
     }
+
+    case options[:environment] do
+      nil -> values
+      environment -> Map.put(values, :environment, environment)
+    end
 
     values
     |> Map.merge(metadata)
