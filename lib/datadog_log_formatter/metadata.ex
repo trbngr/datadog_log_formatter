@@ -5,6 +5,9 @@ defmodule DatadogLogFormatter.Metadata do
     |> Enum.into(%{}, &filter_value(&1, filter_keys))
   end
 
+  defp filter_value(kv, nil), do: kv
+  defp filter_value(kv, []), do: kv
+
   defp filter_value({k, v}, keys) when is_binary(k) do
     cond do
       String.contains?(k, keys) -> {k, "[FILTERED]"}
