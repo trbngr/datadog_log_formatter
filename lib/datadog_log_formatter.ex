@@ -27,9 +27,12 @@ defmodule DatadogLogFormatter do
       environment -> Map.put(values, :environment, environment)
     end
 
-    values
-    |> Map.merge(metadata)
-    |> Jason.encode_to_iodata!()
+    message =
+      values
+      |> Map.merge(metadata)
+      |> Jason.encode_to_iodata!()
+
+    message ++ [?\n]
   end
 
   def normalize(meta) when is_list(meta) do
