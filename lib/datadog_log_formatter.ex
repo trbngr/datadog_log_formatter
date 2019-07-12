@@ -5,7 +5,7 @@ defmodule DatadogLogFormatter do
     options =
       Application.get_env(:logger, :datadog_log_formatter,
         service: :elixir,
-        filter_keys: ["password", "secret", "function"]
+        filter_keys: ["password", "secret"]
       )
 
     {:ok, hostname} = :inet.gethostname()
