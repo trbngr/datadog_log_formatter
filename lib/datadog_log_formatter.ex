@@ -1,7 +1,7 @@
 defmodule DatadogLogFormatter do
   def format(level, message, timestamp, metadata) do
     options =
-      Application.get_env(:logger, :datadog_formatter,
+      Application.get_env(:logger, :datadog_log_formatter,
         level: :debug,
         service: :elixir
       )
