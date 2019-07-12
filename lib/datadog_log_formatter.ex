@@ -21,7 +21,7 @@ defmodule DatadogLogFormatter do
       timestamp: Timestamp.datetime(timestamp),
       host: List.to_string(hostname),
       service: options[:service],
-      environment: System.get_env("DD_APP_ENV", "Dev")
+      environment: System.get_env("DD_APP_ENV") || "Dev"
     }
 
     metadata = Metadata.normalize(metadata, options[:filter_keys])
