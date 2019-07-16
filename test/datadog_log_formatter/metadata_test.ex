@@ -39,9 +39,9 @@ defmodule DatadogLogFormatter.MetadataTest do
           },
           struct: %Ssn{ssn: "111111111"}
         ],
-        mask_keys: %{
-          "ssn" => {Mask, :ssn}
-        }
+        mask_keys: [
+          ssn: {Mask, :ssn}
+        ]
       )
 
     assert result == %{

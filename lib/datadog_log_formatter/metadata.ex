@@ -1,12 +1,33 @@
 defmodule DatadogLogFormatter.Metadata do
   def normalize(meta, options) when is_list(meta) do
-    filter_keys = options[:filter_keys]
-    mask_keys = options[:mask_keys]
+    filter_keys = read_filter_keys(options)
+    mask_keys = read_mask_keys(options)
 
     meta
     |> normalize()
     |> mask(mask_keys)
     |> filter(filter_keys)
+  end
+
+  defp read_mask_keys(options) do
+    case options[:mask_keys] do
+      nil ->
+        nil
+
+      keys when is_list(keys) or is_map(keys) ->
+        Enum.into(keys, %{}, fn {k, v} -> {to_string(k), v} end)
+
+      _ ->
+        raise "mask_keys is expected to be a list or a map"
+    end
+  end
+
+  defp read_filter_keys(options) do
+    case options[:filter_keys] do
+      nil -> nil
+      keys when is_list(keys) -> keys
+      _ -> raise "filter_keys is expected to be a list"
+    end
   end
 
   defp mask(%{__struct__: mod} = struct, keys) when is_atom(mod) do
