@@ -5,7 +5,10 @@ defmodule DatadogLogFormatter do
     options =
       Application.get_env(:logger, :datadog_log_formatter,
         service: :elixir,
-        filter_keys: ["password", "secret"]
+        filter_keys: ["password", "secret"],
+        mask_keys: [
+          ssn: {Mask, :ssn}
+        ]
       )
 
     {:ok, hostname} = :inet.gethostname()
@@ -24,7 +27,7 @@ defmodule DatadogLogFormatter do
       environment: System.get_env("DD_APP_ENV") || "Dev"
     }
 
-    metadata = Metadata.normalize(metadata, options[:filter_keys])
+    metadata = Metadata.normalize(metadata, options)
 
     message =
       values

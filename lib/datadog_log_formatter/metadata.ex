@@ -1,50 +1,84 @@
 defmodule DatadogLogFormatter.Metadata do
-  def normalize(meta, filter_keys) when is_list(meta) do
+  def normalize(meta, options) when is_list(meta) do
+    filter_keys = options[:filter_keys]
+    mask_keys = options[:mask_keys]
+
     meta
-    |> normalize_values()
-    |> Enum.into(%{}, &filter_value(&1, filter_keys))
+    |> normalize()
+    |> mask(mask_keys)
+    |> filter(filter_keys)
   end
 
-  defp filter_value(kv, nil), do: kv
-  defp filter_value(kv, []), do: kv
-
-  defp filter_value({k, v}, keys) when is_binary(k) do
-    cond do
-      String.contains?(k, keys) -> {k, "[FILTERED]"}
-      true -> {k, v}
-    end
+  defp mask(%{__struct__: mod} = struct, keys) when is_atom(mod) do
+    struct
+    |> Map.from_struct()
+    |> filter(keys)
   end
 
-  defp filter_value({k, v}, keys) when is_atom(k) do
-    {k, v} = filter_value({Atom.to_string(k), v}, keys)
-    {String.to_existing_atom(k), v}
+  defp mask(%{} = map, nil), do: map
+  defp mask(%{} = map, list) when length(list) == 0, do: map
+
+  defp mask(%{} = map, %{} = keys) do
+    Enum.into(map, %{}, fn {k, v} ->
+      case Map.get(keys, k) do
+        {mod, fun} -> {k, apply(mod, fun, [v])}
+        _ -> {k, mask(v, keys)}
+      end
+    end)
   end
 
-  defp normalize_values(meta) when is_list(meta) do
-    if Keyword.keyword?(meta) do
-      meta
-      |> Enum.into(%{})
-      |> Map.drop([:ansi_color, :pid])
-      |> normalize_values()
-    else
-      Enum.map(meta, &normalize_values/1)
-    end
+  defp mask([_ | _] = list, keys) do
+    Enum.map(list, &mask(&1, keys))
   end
 
-  defp normalize_values(%{__struct__: type} = map) do
+  defp mask(other, _keys), do: other
+
+  defp filter(%{__struct__: mod} = struct, keys) when is_atom(mod) do
+    struct
+    |> Map.from_struct()
+    |> filter(keys)
+  end
+
+  defp filter(%{} = map, nil), do: map
+  defp filter(%{} = map, keys) when length(keys) == 0, do: map
+
+  defp filter(%{} = map, keys) do
+    Enum.into(map, %{}, fn {k, v} ->
+      if String.contains?(k, keys) do
+        {k, "[FILTERED]"}
+      else
+        {k, filter(v, keys)}
+      end
+    end)
+  end
+
+  defp filter([_ | _] = list, keys) do
+    Enum.map(list, &filter(&1, keys))
+  end
+
+  defp filter(other, _keys), do: other
+
+  defp normalize(meta) when is_list(meta) do
+    meta
+    |> Enum.into(%{})
+    |> Map.drop([:ansi_color, :pid])
+    |> normalize()
+  end
+
+  defp normalize(%{__struct__: type} = map) do
     map
     |> Map.from_struct()
     |> Map.merge(%{type: type})
-    |> normalize_values()
+    |> normalize()
   end
 
-  defp normalize_values(map) when is_map(map),
-    do:
-      Enum.reduce(map, %{}, fn {key, value}, acc ->
-        Map.put(acc, key, normalize_values(value))
-      end)
+  defp normalize(map) when is_map(map) do
+    Enum.reduce(map, %{}, fn {key, value}, acc ->
+      Map.put(acc, to_string(key), normalize(value))
+    end)
+  end
 
-  defp normalize_values(string) when is_binary(string), do: string
+  defp normalize(string) when is_binary(string), do: string
 
-  defp normalize_values(other), do: inspect(other)
+  defp normalize(other), do: inspect(other)
 end
