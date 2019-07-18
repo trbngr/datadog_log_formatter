@@ -2,16 +2,18 @@ defmodule DatadogLogFormatter do
   alias DatadogLogFormatter.{Timestamp, Metadata}
 
   def format(level, message, timestamp, metadata) do
+    {:ok, hostname} = :inet.gethostname()
+
     options =
       Application.get_env(:logger, :datadog_log_formatter,
         service: :elixir,
+        host: List.to_string(hostname),
+        environment: System.get_env("DD_APP_ENV") || "Dev",
         filter_keys: ["password", "secret"],
         mask_keys: [
           ssn: {Mask, :ssn}
         ]
       )
-
-    {:ok, hostname} = :inet.gethostname()
 
     values = %{
       message:
@@ -22,9 +24,9 @@ defmodule DatadogLogFormatter do
       level: level,
       source: :elixir,
       timestamp: Timestamp.datetime(timestamp),
-      host: List.to_string(hostname),
+      host: options[:host],
       service: options[:service],
-      environment: System.get_env("DD_APP_ENV") || "Dev"
+      environment: options[:environment]
     }
 
     metadata = Metadata.normalize(metadata, options)
