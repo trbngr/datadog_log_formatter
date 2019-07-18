@@ -2,18 +2,7 @@ defmodule DatadogLogFormatter do
   alias DatadogLogFormatter.{Timestamp, Metadata}
 
   def format(level, message, timestamp, metadata) do
-    {:ok, hostname} = :inet.gethostname()
-
-    options =
-      Application.get_env(:logger, :datadog_log_formatter,
-        service: :elixir,
-        host: List.to_string(hostname),
-        environment: System.get_env("DD_APP_ENV") || "Dev",
-        filter_keys: ["password", "secret"],
-        mask_keys: [
-          ssn: {Mask, :ssn}
-        ]
-      )
+    options = read_options()
 
     values = %{
       message:
@@ -38,4 +27,28 @@ defmodule DatadogLogFormatter do
 
     message ++ [?\n]
   end
+
+  @default_options [
+    service: :elixir,
+    environment: "Dev",
+    filter_keys: ["password", "secret"],
+    mask_keys: [
+      ssn: {Mask, :ssn}
+    ]
+  ]
+
+  def read_options() do
+    opts =
+      Application.get_env(:logger, :datadog_log_formatter, @default_options)
+      |> Keyword.merge(@default_options, fn _, given, _default -> given end)
+
+    put_host(opts, opts[:host])
+  end
+
+  defp put_host(opts, nil) do
+    {:ok, hostname} = :inet.gethostname()
+    Keyword.put(opts, :host, hostname)
+  end
+
+  defp put_host(opts, _hostname), do: opts
 end
