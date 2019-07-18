@@ -37,7 +37,6 @@ defmodule DatadogLogFormatter.Metadata do
   end
 
   defp mask(%{} = map, nil), do: map
-  defp mask(%{} = map, list) when length(list) == 0, do: map
 
   defp mask(%{} = map, %{} = keys) do
     Enum.into(map, %{}, fn {k, v} ->
@@ -80,10 +79,14 @@ defmodule DatadogLogFormatter.Metadata do
   defp filter(other, _keys), do: other
 
   defp normalize(meta) when is_list(meta) do
-    meta
-    |> Enum.into(%{})
-    |> Map.drop([:ansi_color, :pid])
-    |> normalize()
+    if Keyword.keyword?(meta) do
+      meta
+      |> Enum.into(%{})
+      |> Map.drop([:ansi_color, :pid])
+      |> normalize()
+    else
+      meta
+    end
   end
 
   defp normalize(%{__struct__: type} = map) do
@@ -100,6 +103,5 @@ defmodule DatadogLogFormatter.Metadata do
   end
 
   defp normalize(string) when is_binary(string), do: string
-
   defp normalize(other), do: inspect(other)
 end
