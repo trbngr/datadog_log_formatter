@@ -33,7 +33,7 @@ defmodule DatadogLogFormatter.Metadata do
   defp mask(%{__struct__: mod} = struct, keys) when is_atom(mod) do
     struct
     |> Map.from_struct()
-    |> filter(keys)
+    |> mask(keys)
   end
 
   defp mask(%{} = map, nil), do: map
