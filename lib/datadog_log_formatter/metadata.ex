@@ -64,7 +64,7 @@ defmodule DatadogLogFormatter.Metadata do
 
   defp filter(%{} = map, keys) do
     Enum.into(map, %{}, fn {k, v} ->
-      if String.contains?(k, keys) do
+      if String.contains?(to_string(k), keys) do
         {k, "[FILTERED]"}
       else
         {k, filter(v, keys)}
