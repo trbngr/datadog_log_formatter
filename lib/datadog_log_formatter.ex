@@ -47,7 +47,7 @@ defmodule DatadogLogFormatter do
 
   defp put_host(opts, nil) do
     {:ok, hostname} = :inet.gethostname()
-    Keyword.put(opts, :host, hostname)
+    Keyword.put(opts, :host, to_string(hostname))
   end
 
   defp put_host(opts, _hostname), do: opts
