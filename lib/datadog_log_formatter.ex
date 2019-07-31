@@ -1,5 +1,5 @@
 defmodule DatadogLogFormatter do
-  alias DatadogLogFormatter.{Timestamp, Metadata}
+  alias DatadogLogFormatter.{Timestamp, Metadata, Mask}
 
   def format(level, message, timestamp, metadata) do
     options = read_options()
