@@ -8,6 +8,7 @@ defmodule DatadogLogFormatter do
       message:
         case message do
           message when is_list(message) -> IO.iodata_to_binary(message)
+          message when not is_binary(message) -> inspect(message)
           message -> message
         end,
       level: level,

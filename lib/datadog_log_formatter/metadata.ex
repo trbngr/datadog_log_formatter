@@ -102,6 +102,7 @@ defmodule DatadogLogFormatter.Metadata do
     end)
   end
 
+  defp normalize(pid) when is_pid(pid), do: inspect(pid)
   defp normalize(string) when is_binary(string), do: string
   defp normalize(other), do: inspect(other)
 end
